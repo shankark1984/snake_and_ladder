@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ladders-fangs-v5';
+const CACHE_NAME = 'ladders-fangs-v6';
 const ASSETS_TO_CACHE = [
     './index.html',
     './manifest.json',
