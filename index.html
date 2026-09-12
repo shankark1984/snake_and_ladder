@@ -2112,34 +2112,31 @@
       logoutBtnTop.addEventListener('click', signOut);
 
       function initProfile() {
-        // Use browser's private localStorage for device-specific login state
+        // Directly load the saved profile from browser's local storage on refresh
         try {
-          var savedEmail = localStorage.getItem('ladder_last_email');
-          if (savedEmail) {
-            window.storage.get('profile', false).then(function (res) {
-              // If you store individual profiles or fetch by email
-              // For simplicity, we can cache the full profile object in localStorage:
-              var cachedProf = localStorage.getItem('ladder_profile');
-              if (cachedProf) {
-                var pData = JSON.parse(cachedProf);
-                if (pData && pData.email === savedEmail) {
-                  state.profile = pData;
-                  regName.value = pData.name || '';
-                  regEmail.value = pData.email || '';
-                  regCountry.value = pData.country || '';
-                  selectedGender = pData.gender || 'boy';
-                  Array.prototype.forEach.call(regGenderRow.children, function (c) {
-                    c.classList.toggle('selected', c.dataset.gender === selectedGender);
-                  });
-                  applyProfileToUI();
-                  showGameConfig();
-                }
-              }
-            }).catch(function () { });
-          }
-        } catch (e) { }
-      }
+          var cachedProf = localStorage.getItem('ladder_profile');
+          if (cachedProf) {
+            var pData = JSON.parse(cachedProf);
+            if (pData && pData.email) {
+              state.profile = pData;
+              regName.value = pData.name || '';
+              regEmail.value = pData.email || '';
+              regCountry.value = pData.country || '';
+              selectedGender = pData.gender || 'boy';
 
+              // Restore gender selection UI state
+              Array.prototype.forEach.call(regGenderRow.children, function (c) {
+                c.classList.toggle('selected', c.dataset.gender === selectedGender);
+              });
+
+              applyProfileToUI();
+              showGameConfig();
+            }
+          }
+        } catch (e) {
+          console.error('Error loading profile from localStorage:', e);
+        }
+      }
       var lbOverlay = document.getElementById('leaderboard-overlay');
       document.getElementById('leaderboard-btn').addEventListener('click', function () {
         sfx.click();
