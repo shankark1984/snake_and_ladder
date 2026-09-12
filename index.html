@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Ladders &amp; Fangs</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
   <!-- Supabase JS Client SDK -->
@@ -375,13 +376,15 @@
       color: var(--bg-deep-2);
     }
 
-    .login-row {
+    .login-grid {
       display: flex;
-      gap: 8px;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .login-row input {
-      flex: 1;
+    .login-grid input,
+    .login-grid select {
+      width: 100%;
       padding: 12px;
       border-radius: 10px;
       border: 2px solid var(--line);
@@ -390,109 +393,91 @@
       font-weight: 700;
       background: #fffaf0;
       color: var(--ink);
-      min-width: 0;
+    }
+
+    .gender-select-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .gender-option {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 10px;
+      border: 2px solid var(--line);
+      background: #fffaf0;
+      font-family: 'Baloo 2', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .gender-option.selected {
+      border-color: var(--ladder-dark);
+      background: #fdf0d8;
+      box-shadow: 0 2px 0 var(--ladder-dark);
     }
 
     .signin-btn {
-      padding: 12px 18px;
+      width: 100%;
+      padding: 14px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       background: var(--bg-deep-2);
       color: var(--cream);
       font-family: 'Baloo 2', sans-serif;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 16px;
       cursor: pointer;
-      flex: 0 0 auto;
+      margin-top: 4px;
     }
 
     .login-status {
-      margin-top: 10px;
+      margin-top: 8px;
       font-size: 13px;
       font-weight: 700;
       color: #5a6b63;
       min-height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .login-status.ok {
-      color: #3f7d3a;
+      text-align: center;
     }
 
     .login-status.error {
       color: var(--snake-dark);
     }
 
+    .login-status.ok {
+      color: #3f7d3a;
+    }
+
+    .logout-btn-bar {
+      background: #b0432e;
+      color: #fff;
+      border: none;
+      font-family: 'Baloo 2', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 2px 0 var(--snake-dark);
+    }
+
+    .logout-btn-bar:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+
     .signout-link {
       background: transparent;
       border: none;
-      color: #5a6b63;
+      color: var(--snake-dark);
       text-decoration: underline;
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       padding: 0;
-    }
-
-    .name-inputs {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .name-inputs input {
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 2px solid var(--line);
-      font-family: 'Nunito Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      background: #fffaf0;
-      color: var(--ink);
-    }
-
-    .name-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .gender-toggle {
-      display: flex;
-      gap: 4px;
-      margin-left: auto;
-      flex: 0 0 auto;
-    }
-
-    .gender-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 9px;
-      border: 2px solid var(--line);
-      background: #fffaf0;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-    }
-
-    .gender-btn.selected {
-      border-color: var(--ladder-dark);
-      background: #fdf0d8;
-      box-shadow: 0 2px 0 var(--ladder-dark);
-    }
-
-    .swatch {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      flex: 0 0 auto;
+      margin-top: 6px;
+      display: inline-block;
     }
 
     .start-btn {
@@ -1004,7 +989,7 @@
       margin-top: 2px;
     }
 
-    /* ---------- Leaderboard modal ---------- */
+    /* ---------- Leaderboard modal & search/filters ---------- */
     #leaderboard-overlay {
       display: none;
       position: fixed;
@@ -1022,8 +1007,8 @@
       border-radius: 18px;
       padding: 24px 22px 20px;
       width: 100%;
-      max-width: 420px;
-      max-height: 82vh;
+      max-width: 440px;
+      max-height: 88vh;
       display: flex;
       flex-direction: column;
       border: 3px solid var(--line);
@@ -1034,7 +1019,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .lb-head h2 {
@@ -1056,10 +1041,28 @@
       background: #ece0c3;
     }
 
+    .lb-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .lb-search-input {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 2px solid var(--line);
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      background: #fffaf0;
+      color: var(--ink);
+    }
+
     .lb-tab-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
     }
 
     .lb-tab-btn {
@@ -1087,7 +1090,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      min-height: 120px;
+      min-height: 140px;
     }
 
     .lb-row {
@@ -1159,7 +1162,7 @@
     .lb-note {
       font-size: 11px;
       color: #5a6b63;
-      margin-top: 12px;
+      margin-top: 10px;
       text-align: center;
       line-height: 1.4;
     }
@@ -1340,115 +1343,130 @@
       <div class="profile-bar">
         <span id="profile-badge" class="profile-badge">Level 1 · 0 pts</span>
         <button id="leaderboard-btn" class="lb-open-btn">🏆 Leaderboard</button>
+        <button id="logout-btn-top" class="logout-btn-bar" style="display:none;">🚪 Logout</button>
         <button id="sound-toggle-btn" class="sound-toggle-btn" aria-label="Toggle sound">🔊</button>
       </div>
     </header>
 
-    <!-- SETUP SCREEN -->
+    <!-- MANDATORY SETUP / LOGIN SCREEN -->
     <div id="setup-screen" class="card">
 
-      <div class="setup-section" id="login-section">
-        <h3>Sign in with email</h3>
-        <div class="hint">Creates your unique player ID and syncs your points across devices. Optional — skip to play as
-          a guest (no leaderboard, no online battles).</div>
-        <div class="login-row">
-          <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
-          <button id="signin-btn" class="signin-btn">Sign In</button>
+      <!-- STEP 1: Mandatory Identity & Registration -->
+      <div class="setup-section" id="mandatory-login-card">
+        <h3>👤 Player 1 Profile &amp; Login</h3>
+        <div class="hint">Please enter your details to sign in and unlock the game, leaderboard, and online matches.
+        </div>
+        <div class="login-grid">
+          <input type="text" id="reg-name" placeholder="Your Name (e.g. Shankar)" maxlength="14">
+          <input type="email" id="reg-email" placeholder="Email Address (you@example.com)" autocomplete="email">
+          <select id="reg-country">
+            <option value="">Select your country…</option>
+          </select>
+          <div>
+            <div style="font-size:12px; font-weight:700; color:#5a6b63; margin-bottom:4px;">Pawn Style / Gender</div>
+            <div class="gender-select-row" id="reg-gender-row">
+              <div class="gender-option selected" data-gender="boy">👦 Boy</div>
+              <div class="gender-option" data-gender="girl">👧 Girl</div>
+            </div>
+          </div>
+          <button type="button" id="reg-signin-btn" class="signin-btn">Continue to Game Setup →</button>
         </div>
         <div id="login-status" class="login-status"></div>
       </div>
 
-      <div class="setup-section">
-        <h3>How do you want to play?</h3>
-        <div class="choice-row" id="mode-row">
-          <button class="choice-btn mode-btn selected" data-mode="local">🎮 Local Play</button>
-          <button class="choice-btn mode-btn" data-mode="battle">⚔️ Online Battle</button>
-        </div>
-      </div>
-
-      <div id="local-setup-sections">
-        <div class="setup-section">
-          <h3>How many players?</h3>
-          <div class="choice-row" id="player-count-row">
-            <button class="choice-btn" data-count="1">1</button>
-            <button class="choice-btn" data-count="2">2</button>
-            <button class="choice-btn" data-count="3">3</button>
-            <button class="choice-btn" data-count="4">4</button>
+      <!-- STEP 2: Game Configuration (Hidden until signed in) -->
+      <div id="game-config-sections" style="display:none;">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:10px; border-bottom:2px solid var(--line);">
+          <div>
+            <strong id="logged-in-user-label" style="font-size:15px; color:var(--bg-deep-2);"></strong>
+            <div style="font-size:11.5px; color:#5a6b63;">Signed in &amp; profile synced</div>
           </div>
-        </div>
-
-        <div class="setup-section" id="names-section" style="display:none;">
-          <h3>Player names</h3>
-          <div class="name-inputs" id="name-inputs"></div>
+          <button type="button" id="signout-link-btn" class="signout-link">Switch Account / Logout</button>
         </div>
 
         <div class="setup-section">
-          <h3>Your country</h3>
-          <div class="hint">Used for the leaderboard, and your points from Player 1 wins are saved to your profile.
+          <h3>How do you want to play?</h3>
+          <div class="choice-row" id="mode-row">
+            <button class="choice-btn mode-btn selected" data-mode="local">🎮 Local Play</button>
+            <button class="choice-btn mode-btn" data-mode="battle">⚔️ Online Battle</button>
           </div>
-          <select id="country-select" class="country-select">
-            <option value="">Select a country…</option>
-          </select>
         </div>
 
-        <div class="setup-section">
-          <h3>Choose a board</h3>
-          <div class="hint">Harder boards earn more points per win.</div>
-          <div class="board-choice" id="board-choice-row">
-            <div class="board-card" data-board="classic">
-              <div class="bname">🎲 Classic <span class="diff-chip diff-medium">Medium · 1.0x</span></div>
-              <div class="bdesc">A balanced, traditional board. Fair mix of snakes and ladders.</div>
+        <div id="local-setup-sections">
+          <div class="setup-section">
+            <h3>How many players?</h3>
+            <div class="choice-row" id="player-count-row">
+              <button class="choice-btn" data-count="1">1</button>
+              <button class="choice-btn" data-count="2">2</button>
+              <button class="choice-btn" data-count="3">3</button>
+              <button class="choice-btn" data-count="4">4</button>
             </div>
-            <div class="board-card" data-board="gentle">
-              <div class="bname">🌱 Gentle Climb <span class="diff-chip diff-easy">Easy · 0.75x</span></div>
-              <div class="bdesc">More ladders than snakes — friendlier for a quick, relaxed game.</div>
-            </div>
-            <div class="board-card" data-board="chaos">
-              <div class="bname">🔥 Chaos Mode <span class="diff-chip diff-hard">Hard · 1.6x</span></div>
-              <div class="bdesc">Snakes everywhere. Short ladders, long slides. Not for the faint of heart.</div>
-            </div>
-            <div class="board-card" data-board="longshot">
-              <div class="bname">🚀 Long Shot <span class="diff-chip diff-medhard">Med-Hard · 1.3x</span></div>
-              <div class="bdesc">Fewer, but dramatic, jumps in both directions — huge swings of fortune.</div>
-            </div>
-            <div class="board-card builder-card" data-board="custom" id="custom-board-card">
-              <div class="bname">🛠️ My Board <span class="diff-chip diff-custom">Custom · 1.2x</span></div>
-              <div class="bdesc" id="custom-board-desc">Design your own adventure — place every ladder and snake
-                yourself.</div>
-              <button type="button" id="open-builder-btn" class="builder-open-btn">Open Board Builder →</button>
+          </div>
+
+          <div class="setup-section" id="names-section" style="display:none;">
+            <h3>Additional Player names</h3>
+            <div class="name-inputs" id="name-inputs"></div>
+          </div>
+
+          <div class="setup-section">
+            <h3>Choose a board</h3>
+            <div class="hint">Harder boards earn more points per win.</div>
+            <div class="board-choice" id="board-choice-row">
+              <div class="board-card" data-board="classic">
+                <div class="bname">🎲 Classic <span class="diff-chip diff-medium">Medium · 1.0x</span></div>
+                <div class="bdesc">A balanced, traditional board. Fair mix of snakes and ladders.</div>
+              </div>
+              <div class="board-card" data-board="gentle">
+                <div class="bname">🌱 Gentle Climb <span class="diff-chip diff-easy">Easy · 0.75x</span></div>
+                <div class="bdesc">More ladders than snakes — friendlier for a quick, relaxed game.</div>
+              </div>
+              <div class="board-card" data-board="chaos">
+                <div class="bname">🔥 Chaos Mode <span class="diff-chip diff-hard">Hard · 1.6x</span></div>
+                <div class="bdesc">Snakes everywhere. Short ladders, long slides. Not for the faint of heart.</div>
+              </div>
+              <div class="board-card" data-board="longshot">
+                <div class="bname">🚀 Long Shot <span class="diff-chip diff-medhard">Med-Hard · 1.3x</span></div>
+                <div class="bdesc">Fewer, but dramatic, jumps in both directions — huge swings of fortune.</div>
+              </div>
+              <div class="board-card builder-card" data-board="custom" id="custom-board-card">
+                <div class="bname">🛠️ My Board <span class="diff-chip diff-custom">Custom · 1.2x</span></div>
+                <div class="bdesc" id="custom-board-desc">Design your own adventure — place every ladder and snake
+                  yourself.</div>
+                <button type="button" id="open-builder-btn" class="builder-open-btn">Open Board Builder →</button>
+              </div>
             </div>
           </div>
         </div>
+
+        <div id="battle-setup-section" style="display:none;">
+          <div class="setup-section">
+            <h3>⚔️ Online Battle · 2 players</h3>
+            <div class="hint">Play turn-by-turn with a friend on another device. Moves sync every couple of seconds.
+            </div>
+            <label class="battle-label" for="battle-board-select">Board</label>
+            <select id="battle-board-select" class="country-select">
+              <option value="classic">🎲 Classic</option>
+              <option value="gentle">🌱 Gentle Climb</option>
+              <option value="chaos">🔥 Chaos Mode</option>
+              <option value="longshot">🚀 Long Shot</option>
+            </select>
+            <button type="button" id="create-room-btn" class="start-btn" style="margin-top:12px;">🆕 Create
+              Room</button>
+            <div class="or-divider">— or —</div>
+            <div class="join-row">
+              <input type="text" id="join-code-input" placeholder="Enter room code" maxlength="6">
+              <button type="button" id="join-room-btn" class="builder-secondary-btn">Join</button>
+            </div>
+            <div id="battle-status" class="hint battle-status"></div>
+            <button type="button" id="battle-cancel-btn" class="newgame-btn" style="margin-top:10px; display:none;">✕
+              Cancel</button>
+          </div>
+        </div>
+
+        <button class="start-btn" id="start-btn" disabled>Start Game</button>
       </div>
 
-      <div id="battle-setup-section" style="display:none;">
-        <div class="setup-section" id="battle-signin-hint">
-          <div class="hint">Sign in with your email above to battle online.</div>
-        </div>
-        <div class="setup-section" id="battle-controls" style="display:none;">
-          <h3>⚔️ Online Battle · 2 players</h3>
-          <div class="hint">Play turn-by-turn with a friend on another device. Moves sync every couple of seconds —
-            think play-by-mail, not instant multiplayer.</div>
-          <label class="battle-label" for="battle-board-select">Board</label>
-          <select id="battle-board-select" class="country-select">
-            <option value="classic">🎲 Classic</option>
-            <option value="gentle">🌱 Gentle Climb</option>
-            <option value="chaos">🔥 Chaos Mode</option>
-            <option value="longshot">🚀 Long Shot</option>
-          </select>
-          <button type="button" id="create-room-btn" class="start-btn" style="margin-top:12px;">🆕 Create Room</button>
-          <div class="or-divider">— or —</div>
-          <div class="join-row">
-            <input type="text" id="join-code-input" placeholder="Enter room code" maxlength="6">
-            <button type="button" id="join-room-btn" class="builder-secondary-btn">Join</button>
-          </div>
-          <div id="battle-status" class="hint battle-status"></div>
-          <button type="button" id="battle-cancel-btn" class="newgame-btn" style="margin-top:10px; display:none;">✕
-            Cancel</button>
-        </div>
-      </div>
-
-      <button class="start-btn" id="start-btn" disabled>Start Game</button>
     </div>
 
     <!-- GAME SCREEN -->
@@ -1578,20 +1596,24 @@
     </div>
   </div>
 
+  <!-- LEADERBOARD MODAL WITH LIVE SEARCH & FILTER -->
   <div id="leaderboard-overlay">
     <div class="leaderboard-card">
       <div class="lb-head">
         <h2>🏆 Leaderboard</h2>
         <button id="close-leaderboard" class="icon-close" aria-label="Close">✕</button>
       </div>
-      <div class="lb-tab-row">
-        <button class="lb-tab-btn selected" data-tab="global">🌍 Global</button>
-        <button class="lb-tab-btn" data-tab="country">📍 My Country</button>
+      <div class="lb-controls">
+        <input type="text" id="lb-search" class="lb-search-input" placeholder="🔍 Search user name…">
+        <div class="lb-tab-row">
+          <button class="lb-tab-btn selected" data-tab="global">🌍 Global</button>
+          <button class="lb-tab-btn" data-tab="country">📍 My Country</button>
+        </div>
       </div>
       <div class="lb-list" id="lb-list">
         <div class="lb-empty">Loading scores…</div>
       </div>
-      <div class="lb-note">Names, countries, levels and points here are visible to everyone using this app.</div>
+      <div class="lb-note">Active player rankings synced live via Supabase.</div>
     </div>
   </div>
 
@@ -1627,13 +1649,13 @@
   </div>
 
   <script>
-    // 1. Initialize Supabase client (Replace with your actual project URL and anon public key)
-    var SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
-    var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    // 1. Initialize Supabase client
+    var SUPABASE_URL = 'https://xcuzblrfsghdktcqgzru.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjdXpibHJmc2doZGt0Y3FnenJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMTI5NjIsImV4cCI6MjEwNDc4ODk2Mn0.G-H6LMISp4TGr5FyImm9XrTKHZxhP4ElGhymvbXBNjg';
 
     var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 2. Define the window.storage bridge that the game code expects
+    // 2. Define the window.storage bridge
     window.storage = {
       get: async function (key, shared) {
         try {
@@ -1894,8 +1916,10 @@
         });
       }
 
-      function populateCountrySelect() {
-        var sel = document.getElementById('country-select');
+      function populateCountrySelects() {
+        var sel = document.getElementById('reg-country');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Select your country…</option>';
         COUNTRIES.forEach(function (c) {
           var opt = document.createElement('option');
           opt.value = c[0];
@@ -1909,12 +1933,8 @@
         return found ? found[1] : code;
       }
 
-      function generateGuestId() {
-        return 'guest_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      }
-
       function defaultProfile() {
-        return { userId: generateGuestId(), email: '', name: '', country: '', gender: 'boy', totalPoints: 0, level: 1, gamesWon: 0, soundOn: true };
+        return { userId: '', email: '', name: '', country: '', gender: 'boy', totalPoints: 0, level: 1, gamesWon: 0, soundOn: true };
       }
 
       function isValidEmail(e) {
@@ -1937,7 +1957,7 @@
       }
 
       function saveProfilePersonal() {
-        if (!state.storageOK || !state.profile) return;
+        if (!state.storageOK || !state.profile || !state.profile.email) return;
         window.storage.set('profile', JSON.stringify(state.profile), false).catch(function () { });
       }
 
@@ -1984,43 +2004,52 @@
         return { pts: pts, level: afterInfo.level, leveledUp: afterInfo.level > beforeLevel };
       }
 
-      var emailInput = document.getElementById('email-input');
-      var signinBtn = document.getElementById('signin-btn');
+      // Mandatory Login handling elements
+      var regName = document.getElementById('reg-name');
+      var regEmail = document.getElementById('reg-email');
+      var regCountry = document.getElementById('reg-country');
+      var regGenderRow = document.getElementById('reg-gender-row');
+      var regSigninBtn = document.getElementById('reg-signin-btn');
       var loginStatus = document.getElementById('login-status');
+      var mandatoryLoginCard = document.getElementById('mandatory-login-card');
+      var gameConfigSections = document.getElementById('game-config-sections');
+      var loggedInUserLabel = document.getElementById('logged-in-user-label');
+      var signoutLinkBtn = document.getElementById('signout-link-btn');
+      var logoutBtnTop = document.getElementById('logout-btn-top');
+      var lbSearch = document.getElementById('lb-search');
+
+      var selectedGender = 'boy';
+      regGenderRow.addEventListener('click', function (e) {
+        var opt = e.target.closest('.gender-option');
+        if (!opt) return;
+        Array.prototype.forEach.call(regGenderRow.children, function (c) { c.classList.remove('selected'); });
+        opt.classList.add('selected');
+        selectedGender = opt.dataset.gender;
+      });
 
       function setLoginStatus(html, cls) {
         loginStatus.innerHTML = html;
         loginStatus.className = 'login-status' + (cls ? (' ' + cls) : '');
       }
 
-      function renderSignedInStatus() {
-        setLoginStatus(
-          '✅ Signed in as ' + escapeHtml(state.profile.email) +
-          ' — Level ' + state.profile.level + ', ' + state.profile.totalPoints + ' pts' +
-          ' <button type="button" id="signout-btn" class="signout-link">Sign out</button>',
-          'ok'
-        );
-        var so = document.getElementById('signout-btn');
-        if (so) so.addEventListener('click', signOut);
-      }
-
       function applyProfileToUI() {
         updateProfileBadge();
-        var sel = document.getElementById('country-select');
-        if (sel) sel.value = state.profile.country || '';
         state.soundOn = state.profile.soundOn !== false;
         updateSoundToggleUI();
-        updateBattleGate();
       }
 
-      function doSignIn(email, silent) {
-        if (!isValidEmail(email)) {
-          if (!silent) setLoginStatus('Please enter a valid email address.', 'error');
-          return;
-        }
-        if (!silent) setLoginStatus('Signing in…', '');
+      function handleRegistration() {
+        var nameVal = regName.value.trim();
+        var emailVal = regEmail.value.trim();
+        var countryVal = regCountry.value;
 
-        hashEmail(email).then(function (userId) {
+        if (!nameVal) { setLoginStatus('Please enter your name.', 'error'); return; }
+        if (!isValidEmail(emailVal)) { setLoginStatus('Please enter a valid email address.', 'error'); return; }
+        if (!countryVal) { setLoginStatus('Please select your country.', 'error'); return; }
+
+        setLoginStatus('Setting up profile…', '');
+
+        hashEmail(emailVal).then(function (userId) {
           var lookup = state.storageOK
             ? window.storage.get('leaderboard:' + userId, true)
               .then(function (r) { return JSON.parse(r.value); })
@@ -2030,71 +2059,78 @@
           return lookup.then(function (existing) {
             state.profile = {
               userId: userId,
-              email: email,
-              name: (existing && existing.name) || (state.profile && state.profile.name) || '',
-              country: (existing && existing.country) || '',
-              gender: (state.profile && state.profile.gender) || 'boy',
+              email: emailVal,
+              name: nameVal,
+              country: countryVal,
+              gender: selectedGender,
               soundOn: (state.profile && state.profile.soundOn !== false),
               totalPoints: (existing && existing.totalPoints) || 0,
               level: (existing && existing.level) || 1,
               gamesWon: (existing && existing.gamesWon) || 0
             };
             saveProfilePersonal();
+            syncLeaderboard();
             if (state.storageOK) {
-              window.storage.set('last-login', JSON.stringify({ email: email }), false).catch(function () { });
+              window.storage.set('last-login', JSON.stringify({ email: emailVal }), false).catch(function () { });
             }
             applyProfileToUI();
-            renderSignedInStatus();
+            showGameConfig();
           });
         }).catch(function () {
-          if (!silent) setLoginStatus('Could not sign in right now — you can still play as a guest.', 'error');
+          setLoginStatus('Could not register profile right now. Check connection.', 'error');
         });
+      }
+
+      function showGameConfig() {
+        mandatoryLoginCard.style.display = 'none';
+        gameConfigSections.style.display = 'block';
+        logoutBtnTop.style.display = 'inline-flex';
+        loggedInUserLabel.textContent = '👤 ' + state.profile.name + ' (' + flagEmoji(state.profile.country) + ' ' + countryName(state.profile.country) + ')';
       }
 
       function signOut() {
         state.profile = defaultProfile();
         if (state.storageOK) {
           window.storage.set('last-login', JSON.stringify({ email: '' }), false).catch(function () { });
+          window.storage.set('profile', JSON.stringify(defaultProfile()), false).catch(function () { });
         }
-        emailInput.value = '';
-        setLoginStatus('Signed out — playing as a guest.', '');
-        applyProfileToUI();
+        regName.value = '';
+        regEmail.value = '';
+        regCountry.value = '';
+        gameConfigSections.style.display = 'none';
+        mandatoryLoginCard.style.display = 'block';
+        logoutBtnTop.style.display = 'none';
+        setLoginStatus('', '');
       }
 
-      signinBtn.addEventListener('click', function () {
-        doSignIn(emailInput.value.trim(), false);
-      });
-      emailInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') { doSignIn(emailInput.value.trim(), false); }
-      });
+      regSigninBtn.addEventListener('click', handleRegistration);
+      signoutLinkBtn.addEventListener('click', signOut);
+      logoutBtnTop.addEventListener('click', signOut);
 
       function initProfile() {
         if (!state.storageOK) {
-          state.profile = defaultProfile();
-          applyProfileToUI();
           return;
         }
         window.storage.get('last-login', false).then(function (res) {
           var data = JSON.parse(res.value);
           if (data && data.email) {
-            emailInput.value = data.email;
-            doSignIn(data.email, true);
-          } else {
-            loadGuestProfile();
+            window.storage.get('profile', false).then(function (resProf) {
+              var pData = JSON.parse(resProf.value);
+              if (pData && pData.email === data.email) {
+                state.profile = pData;
+                regName.value = pData.name || '';
+                regEmail.value = pData.email || '';
+                regCountry.value = pData.country || '';
+                selectedGender = pData.gender || 'boy';
+                Array.prototype.forEach.call(regGenderRow.children, function (c) {
+                  c.classList.toggle('selected', c.dataset.gender === selectedGender);
+                });
+                applyProfileToUI();
+                showGameConfig();
+              }
+            }).catch(function () { });
           }
-        }).catch(function () {
-          loadGuestProfile();
-        });
-      }
-
-      function loadGuestProfile() {
-        window.storage.get('profile', false).then(function (res) {
-          state.profile = JSON.parse(res.value);
-          applyProfileToUI();
-        }).catch(function () {
-          state.profile = defaultProfile();
-          applyProfileToUI();
-        });
+        }).catch(function () { });
       }
 
       var lbOverlay = document.getElementById('leaderboard-overlay');
@@ -2116,12 +2152,18 @@
         });
       });
 
+      lbSearch.addEventListener('input', function () {
+        renderLeaderboard(state.lbTab, true);
+      });
+
       function fetchLeaderboard() {
         if (!state.storageOK) {
           return Promise.resolve([]);
         }
         return window.storage.list('leaderboard:', true).then(function (res) {
           var keys = (res && res.keys) || [];
+          if (keys.length === 0) return [];
+
           return Promise.all(keys.map(function (k) {
             return window.storage.get(k, true).then(function (r) {
               try {
@@ -2133,28 +2175,38 @@
           }));
         }).then(function (arr) {
           return arr.filter(Boolean);
+        }).catch(function () {
+          return [];
         });
       }
 
       function renderLeaderboard(tab, useCache) {
         var list = document.getElementById('lb-list');
+        var query = lbSearch.value.trim().toLowerCase();
         var now = Date.now();
-        var cacheFresh = useCache && state.lbCache && (now - state.lbCacheAt < 20000);
+        var cacheFresh = useCache && state.lbCache && (now - state.lbCacheAt < 5000);
 
         function draw(entries) {
           var filtered = entries.slice();
           if (tab === 'country') {
             if (!state.profile || !state.profile.country) {
-              list.innerHTML = '<div class="lb-empty">Sign in and pick your country in setup to see local rankings.</div>';
+              list.innerHTML = '<div class="lb-empty">Select your country in profile setup to see local rankings.</div>';
               return;
             }
             filtered = filtered.filter(function (e) { return e.country === state.profile.country; });
           }
-          filtered.sort(function (a, b) { return b.totalPoints - a.totalPoints; });
+
+          if (query) {
+            filtered = filtered.filter(function (e) {
+              return (e.name && e.name.toLowerCase().indexOf(query) !== -1);
+            });
+          }
+
+          filtered.sort(function (a, b) { return (b.totalPoints || 0) - (a.totalPoints || 0); });
           filtered = filtered.slice(0, 20);
 
           if (filtered.length === 0) {
-            list.innerHTML = '<div class="lb-empty">No scores yet — be the first to win a game!</div>';
+            list.innerHTML = '<div class="lb-empty">No matching users found.</div>';
             return;
           }
 
@@ -2165,9 +2217,9 @@
             row.className = 'lb-row' + (isMe ? ' me' : '');
             row.innerHTML =
               '<div class="lb-rank">' + (idx + 1) + '</div>' +
-              '<div class="lb-name"><div class="n">' + escapeHtml(e.name) + (isMe ? ' (you)' : '') + '</div>' +
-              '<div class="c">' + flagEmoji(e.country) + ' ' + escapeHtml(countryName(e.country)) + '</div></div>' +
-              '<div class="lb-pts">' + e.totalPoints + '<span class="lvl">Lvl ' + e.level + '</span></div>';
+              '<div class="lb-name"><div class="n">' + escapeHtml(e.name || 'Player') + (isMe ? ' (you)' : '') + '</div>' +
+              '<div class="c">' + flagEmoji(e.country || 'US') + ' ' + escapeHtml(countryName(e.country || 'US')) + '</div></div>' +
+              '<div class="lb-pts">' + (e.totalPoints || 0) + '<span class="lvl">Lvl ' + (e.level || 1) + '</span></div>';
             list.appendChild(row);
           });
         }
@@ -2182,8 +2234,6 @@
           state.lbCache = entries;
           state.lbCacheAt = Date.now();
           draw(entries);
-        }).catch(function () {
-          list.innerHTML = '<div class="lb-empty">Couldn\'t load the leaderboard right now.</div>';
         });
       }
 
@@ -2193,30 +2243,14 @@
         });
       }
 
-      populateCountrySelect();
+      populateCountrySelects();
       initProfile();
-      document.getElementById('country-select').addEventListener('change', function () {
-        if (state.profile) {
-          state.profile.country = this.value;
-          saveProfilePersonal();
-          syncLeaderboard();
-        }
-      });
 
       function genRoomCode() {
         var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         var code = '';
         for (var i = 0; i < 5; i++) { code += chars.charAt(Math.floor(Math.random() * chars.length)); }
         return code;
-      }
-
-      function updateBattleGate() {
-        var signedIn = !!(state.profile && state.profile.email);
-        var hint = document.getElementById('battle-signin-hint');
-        var controls = document.getElementById('battle-controls');
-        if (!hint || !controls) return;
-        hint.style.display = signedIn ? 'none' : 'block';
-        controls.style.display = signedIn ? 'block' : 'none';
       }
 
       function battleKey(code) { return 'battle:' + code; }
@@ -2407,9 +2441,6 @@
         document.getElementById('local-setup-sections').style.display = (mode === 'local') ? 'block' : 'none';
         document.getElementById('battle-setup-section').style.display = (mode === 'battle') ? 'block' : 'none';
         startBtn.style.display = (mode === 'local') ? 'block' : 'none';
-        if (mode === 'battle') {
-          updateBattleGate();
-        }
       });
 
       document.getElementById('create-room-btn').addEventListener('click', function () {
@@ -2570,30 +2601,14 @@
         nameInputsDiv.innerHTML = '';
 
         if (n === 1) {
-          var row = document.createElement('div');
-          row.className = 'name-row';
-          var sw = document.createElement('div');
-          sw.className = 'swatch';
-          sw.style.background = COLORS[0];
-          var input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = 'Your name';
-          input.maxLength = 14;
-          input.dataset.idx = 0;
-          row.appendChild(sw);
-          row.appendChild(input);
-          row.appendChild(makeGenderToggle(0));
-          nameInputsDiv.appendChild(row);
-
           var hint = document.createElement('div');
           hint.className = 'hint';
-          hint.style.marginTop = '2px';
-          hint.textContent = "You'll play against the Computer 🤖 as Player 2.";
+          hint.textContent = "Player 1 is you (" + state.profile.name + "). You'll play against the Computer 🤖 as Player 2.";
           nameInputsDiv.appendChild(hint);
           return;
         }
 
-        for (var i = 0; i < n; i++) {
+        for (var i = 1; i < n; i++) {
           var row2 = document.createElement('div');
           row2.className = 'name-row';
           var sw2 = document.createElement('div');
@@ -2627,13 +2642,20 @@
         var inputs = nameInputsDiv.querySelectorAll('input');
         state.players = [];
 
+        state.players.push({
+          id: 0,
+          name: state.profile.name,
+          color: COLORS[0],
+          pos: 0,
+          isCPU: false,
+          gender: state.profile.gender
+        });
+
         if (state.numPlayers === 1) {
-          var humanName = inputs[0] && inputs[0].value.trim();
-          state.players.push({ id: 0, name: humanName || 'You', color: COLORS[0], pos: 0, isCPU: false, gender: readGenderForIdx(0) });
           state.players.push({ id: 1, name: 'Computer', color: COLORS[1], pos: 0, isCPU: true, gender: 'robot' });
         } else {
-          for (var i = 0; i < state.numPlayers; i++) {
-            var nm = inputs[i] && inputs[i].value.trim();
+          for (var i = 1; i < state.numPlayers; i++) {
+            var nm = inputs[i - 1] && inputs[i - 1].value.trim();
             state.players.push({
               id: i,
               name: nm || ('Player ' + (i + 1)),
@@ -2648,11 +2670,7 @@
         state.currentIndex = 0;
         state.finished = false;
         state.rollCounts = {};
-        if (state.profile) {
-          state.profile.name = state.players[0].name;
-          state.profile.gender = state.players[0].gender;
-          saveProfilePersonal();
-        }
+
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'block';
         buildBoard();
@@ -3496,9 +3514,6 @@
             html += '<span class="lvl-up">🎉 Leveled up to Level ' + result.level + '!</span>';
             setTimeout(function () { sfx.levelUp(); }, 500);
           }
-          if (!state.profile.email || !state.profile.country) {
-            html += '<span class="lvl-up">Sign in with email and pick a country to join the leaderboard.</span>';
-          }
           pointsEl.innerHTML = html;
           pointsEl.style.display = 'block';
         } else {
@@ -3512,6 +3527,19 @@
       }
 
     })();
+  </script>
+
+  <script>
+    // Register Service Worker for PWA Installation & Offline Caching
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function (err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
   </script>
 
 </body>
