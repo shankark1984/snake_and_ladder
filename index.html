@@ -989,7 +989,7 @@
       margin-top: 2px;
     }
 
-    /* ---------- Leaderboard modal ---------- */
+    /* ---------- Leaderboard modal & search/filters ---------- */
     #leaderboard-overlay {
       display: none;
       position: fixed;
@@ -1007,8 +1007,8 @@
       border-radius: 18px;
       padding: 24px 22px 20px;
       width: 100%;
-      max-width: 420px;
-      max-height: 82vh;
+      max-width: 440px;
+      max-height: 88vh;
       display: flex;
       flex-direction: column;
       border: 3px solid var(--line);
@@ -1019,7 +1019,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .lb-head h2 {
@@ -1041,10 +1041,28 @@
       background: #ece0c3;
     }
 
+    .lb-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .lb-search-input {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 2px solid var(--line);
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      background: #fffaf0;
+      color: var(--ink);
+    }
+
     .lb-tab-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
     }
 
     .lb-tab-btn {
@@ -1072,7 +1090,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      min-height: 120px;
+      min-height: 140px;
     }
 
     .lb-row {
@@ -1144,7 +1162,7 @@
     .lb-note {
       font-size: 11px;
       color: #5a6b63;
-      margin-top: 12px;
+      margin-top: 10px;
       text-align: center;
       line-height: 1.4;
     }
@@ -1578,20 +1596,24 @@
     </div>
   </div>
 
+  <!-- LEADERBOARD MODAL WITH LIVE SEARCH & FILTER -->
   <div id="leaderboard-overlay">
     <div class="leaderboard-card">
       <div class="lb-head">
         <h2>🏆 Leaderboard</h2>
         <button id="close-leaderboard" class="icon-close" aria-label="Close">✕</button>
       </div>
-      <div class="lb-tab-row">
-        <button class="lb-tab-btn selected" data-tab="global">🌍 Global</button>
-        <button class="lb-tab-btn" data-tab="country">📍 My Country</button>
+      <div class="lb-controls">
+        <input type="text" id="lb-search" class="lb-search-input" placeholder="🔍 Search user name…">
+        <div class="lb-tab-row">
+          <button class="lb-tab-btn selected" data-tab="global">🌍 Global</button>
+          <button class="lb-tab-btn" data-tab="country">📍 My Country</button>
+        </div>
       </div>
       <div class="lb-list" id="lb-list">
         <div class="lb-empty">Loading scores…</div>
       </div>
-      <div class="lb-note">Names, countries, levels and points here are visible to everyone using this app.</div>
+      <div class="lb-note">Active player rankings synced live via Supabase.</div>
     </div>
   </div>
 
@@ -1994,6 +2016,7 @@
       var loggedInUserLabel = document.getElementById('logged-in-user-label');
       var signoutLinkBtn = document.getElementById('signout-link-btn');
       var logoutBtnTop = document.getElementById('logout-btn-top');
+      var lbSearch = document.getElementById('lb-search');
 
       var selectedGender = 'boy';
       regGenderRow.addEventListener('click', function (e) {
@@ -2129,6 +2152,10 @@
         });
       });
 
+      lbSearch.addEventListener('input', function () {
+        renderLeaderboard(state.lbTab, true);
+      });
+
       function fetchLeaderboard() {
         if (!state.storageOK) {
           return Promise.resolve([]);
@@ -2155,6 +2182,7 @@
 
       function renderLeaderboard(tab, useCache) {
         var list = document.getElementById('lb-list');
+        var query = lbSearch.value.trim().toLowerCase();
         var now = Date.now();
         var cacheFresh = useCache && state.lbCache && (now - state.lbCacheAt < 5000);
 
@@ -2167,11 +2195,18 @@
             }
             filtered = filtered.filter(function (e) { return e.country === state.profile.country; });
           }
+
+          if (query) {
+            filtered = filtered.filter(function (e) {
+              return (e.name && e.name.toLowerCase().indexOf(query) !== -1);
+            });
+          }
+
           filtered.sort(function (a, b) { return (b.totalPoints || 0) - (a.totalPoints || 0); });
           filtered = filtered.slice(0, 20);
 
           if (filtered.length === 0) {
-            list.innerHTML = '<div class="lb-empty">No scores yet — be the first to win a game!</div>';
+            list.innerHTML = '<div class="lb-empty">No matching users found.</div>';
             return;
           }
 
