@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ladders-fangs-v1';
+const CACHE_NAME = 'ladders-fangs-v2';
 const ASSETS_TO_CACHE = [
     './index.html',
     './manifest.json',
@@ -6,7 +6,7 @@ const ASSETS_TO_CACHE = [
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 
-// Install Event: Cache essential assets
+// Install: Cache core assets and immediately skip waiting
 self.addEventListener('install', function (event) {
     event.waitUntil(
         caches.open(CACHE_NAME).then(function (cache) {
@@ -17,7 +17,7 @@ self.addEventListener('install', function (event) {
     );
 });
 
-// Activate Event: Clean up old caches
+// Activate: Purge old cache buckets and claim active clients instantly
 self.addEventListener('activate', function (event) {
     event.waitUntil(
         caches.keys().then(function (keys) {
@@ -34,13 +34,18 @@ self.addEventListener('activate', function (event) {
     );
 });
 
-// Fetch Event: Serve from cache, fallback to network
+// Fetch: Network-first strategy for live updates, falling back to cache if offline
 self.addEventListener('fetch', function (event) {
     event.respondWith(
-        caches.match(event.request).then(function (cachedResponse) {
-            return cachedResponse || fetch(event.request).catch(function () {
-                // Fallback offline handling can go here if needed
+        fetch(event.request).then(function (networkResponse) {
+            return caches.open(CACHE_NAME).then(function (cache) {
+                if (event.request.method === 'GET' && event.request.url.startsWith('http')) {
+                    cache.put(event.request, networkResponse.clone());
+                }
+                return networkResponse;
             });
+        }).catch(function () {
+            return caches.match(event.request);
         })
     );
 });
