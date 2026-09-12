@@ -2068,11 +2068,14 @@
               level: (existing && existing.level) || 1,
               gamesWon: (existing && existing.gamesWon) || 0
             };
-            saveProfilePersonal();
+
+            // Save profile and email locally to THIS browser/device only
+            try {
+              localStorage.setItem('ladder_last_email', emailVal);
+              localStorage.setItem('ladder_profile', JSON.stringify(state.profile));
+            } catch (e) { }
+
             syncLeaderboard();
-            if (state.storageOK) {
-              window.storage.set('last-login', JSON.stringify({ email: emailVal }), false).catch(function () { });
-            }
             applyProfileToUI();
             showGameConfig();
           });
@@ -2081,19 +2084,13 @@
         });
       }
 
-      function showGameConfig() {
-        mandatoryLoginCard.style.display = 'none';
-        gameConfigSections.style.display = 'block';
-        logoutBtnTop.style.display = 'inline-flex';
-        loggedInUserLabel.textContent = '👤 ' + state.profile.name + ' (' + flagEmoji(state.profile.country) + ' ' + countryName(state.profile.country) + ')';
-      }
-
       function signOut() {
         state.profile = defaultProfile();
-        if (state.storageOK) {
-          window.storage.set('last-login', JSON.stringify({ email: '' }), false).catch(function () { });
-          window.storage.set('profile', JSON.stringify(defaultProfile()), false).catch(function () { });
-        }
+        try {
+          localStorage.removeItem('ladder_last_email');
+          localStorage.removeItem('ladder_profile');
+        } catch (e) { }
+
         regName.value = '';
         regEmail.value = '';
         regCountry.value = '';
@@ -2103,34 +2100,44 @@
         setLoginStatus('', '');
       }
 
+      function showGameConfig() {
+        mandatoryLoginCard.style.display = 'none';
+        gameConfigSections.style.display = 'block';
+        logoutBtnTop.style.display = 'inline-flex';
+        loggedInUserLabel.textContent = '👤 ' + state.profile.name + ' (' + flagEmoji(state.profile.country) + ' ' + countryName(state.profile.country) + ')';
+      }
+
       regSigninBtn.addEventListener('click', handleRegistration);
       signoutLinkBtn.addEventListener('click', signOut);
       logoutBtnTop.addEventListener('click', signOut);
 
       function initProfile() {
-        if (!state.storageOK) {
-          return;
-        }
-        window.storage.get('last-login', false).then(function (res) {
-          var data = JSON.parse(res.value);
-          if (data && data.email) {
-            window.storage.get('profile', false).then(function (resProf) {
-              var pData = JSON.parse(resProf.value);
-              if (pData && pData.email === data.email) {
-                state.profile = pData;
-                regName.value = pData.name || '';
-                regEmail.value = pData.email || '';
-                regCountry.value = pData.country || '';
-                selectedGender = pData.gender || 'boy';
-                Array.prototype.forEach.call(regGenderRow.children, function (c) {
-                  c.classList.toggle('selected', c.dataset.gender === selectedGender);
-                });
-                applyProfileToUI();
-                showGameConfig();
+        // Use browser's private localStorage for device-specific login state
+        try {
+          var savedEmail = localStorage.getItem('ladder_last_email');
+          if (savedEmail) {
+            window.storage.get('profile', false).then(function (res) {
+              // If you store individual profiles or fetch by email
+              // For simplicity, we can cache the full profile object in localStorage:
+              var cachedProf = localStorage.getItem('ladder_profile');
+              if (cachedProf) {
+                var pData = JSON.parse(cachedProf);
+                if (pData && pData.email === savedEmail) {
+                  state.profile = pData;
+                  regName.value = pData.name || '';
+                  regEmail.value = pData.email || '';
+                  regCountry.value = pData.country || '';
+                  selectedGender = pData.gender || 'boy';
+                  Array.prototype.forEach.call(regGenderRow.children, function (c) {
+                    c.classList.toggle('selected', c.dataset.gender === selectedGender);
+                  });
+                  applyProfileToUI();
+                  showGameConfig();
+                }
               }
             }).catch(function () { });
           }
-        }).catch(function () { });
+        } catch (e) { }
       }
 
       var lbOverlay = document.getElementById('leaderboard-overlay');
