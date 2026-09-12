@@ -10,7 +10,6 @@
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
   <!-- Supabase JS Client SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- (Styles go here) -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap');
 
@@ -450,10 +449,28 @@
       color: #3f7d3a;
     }
 
+    .logout-btn-bar {
+      background: #b0432e;
+      color: #fff;
+      border: none;
+      font-family: 'Baloo 2', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 2px 0 var(--snake-dark);
+    }
+
+    .logout-btn-bar:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+
     .signout-link {
       background: transparent;
       border: none;
-      color: #5a6b63;
+      color: var(--snake-dark);
       text-decoration: underline;
       font-size: 12px;
       font-weight: 700;
@@ -1308,6 +1325,7 @@
       <div class="profile-bar">
         <span id="profile-badge" class="profile-badge">Level 1 · 0 pts</span>
         <button id="leaderboard-btn" class="lb-open-btn">🏆 Leaderboard</button>
+        <button id="logout-btn-top" class="logout-btn-bar" style="display:none;">🚪 Logout</button>
         <button id="sound-toggle-btn" class="sound-toggle-btn" aria-label="Toggle sound">🔊</button>
       </div>
     </header>
@@ -1346,7 +1364,7 @@
             <strong id="logged-in-user-label" style="font-size:15px; color:var(--bg-deep-2);"></strong>
             <div style="font-size:11.5px; color:#5a6b63;">Signed in &amp; profile synced</div>
           </div>
-          <button type="button" id="signout-link-btn" class="signout-link">Switch Account</button>
+          <button type="button" id="signout-link-btn" class="signout-link">Switch Account / Logout</button>
         </div>
 
         <div class="setup-section">
@@ -1678,16 +1696,6 @@
         }
       }
     };
-    // Register Service Worker for PWA Installation & Offline Caching
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, function (err) {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
   </script>
   <script>
     (function () {
@@ -1985,6 +1993,7 @@
       var gameConfigSections = document.getElementById('game-config-sections');
       var loggedInUserLabel = document.getElementById('logged-in-user-label');
       var signoutLinkBtn = document.getElementById('signout-link-btn');
+      var logoutBtnTop = document.getElementById('logout-btn-top');
 
       var selectedGender = 'boy';
       regGenderRow.addEventListener('click', function (e) {
@@ -2052,6 +2061,7 @@
       function showGameConfig() {
         mandatoryLoginCard.style.display = 'none';
         gameConfigSections.style.display = 'block';
+        logoutBtnTop.style.display = 'inline-flex';
         loggedInUserLabel.textContent = '👤 ' + state.profile.name + ' (' + flagEmoji(state.profile.country) + ' ' + countryName(state.profile.country) + ')';
       }
 
@@ -2059,17 +2069,20 @@
         state.profile = defaultProfile();
         if (state.storageOK) {
           window.storage.set('last-login', JSON.stringify({ email: '' }), false).catch(function () { });
+          window.storage.set('profile', JSON.stringify(defaultProfile()), false).catch(function () { });
         }
         regName.value = '';
         regEmail.value = '';
         regCountry.value = '';
         gameConfigSections.style.display = 'none';
         mandatoryLoginCard.style.display = 'block';
+        logoutBtnTop.style.display = 'none';
         setLoginStatus('', '');
       }
 
       regSigninBtn.addEventListener('click', handleRegistration);
       signoutLinkBtn.addEventListener('click', signOut);
+      logoutBtnTop.addEventListener('click', signOut);
 
       function initProfile() {
         if (!state.storageOK) {
@@ -2560,7 +2573,6 @@
           return;
         }
 
-        // For 2-4 players, additional names start from Player 2
         for (var i = 1; i < n; i++) {
           var row2 = document.createElement('div');
           row2.className = 'name-row';
@@ -2595,7 +2607,6 @@
         var inputs = nameInputsDiv.querySelectorAll('input');
         state.players = [];
 
-        // Player 1 is always the signed-in user
         state.players.push({
           id: 0,
           name: state.profile.name,
@@ -3481,6 +3492,19 @@
       }
 
     })();
+  </script>
+
+  <script>
+    // Register Service Worker for PWA Installation & Offline Caching
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function (err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
   </script>
 
 </body>
