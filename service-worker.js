@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ladders-fangs-v11';
+const CACHE_NAME = 'ladders-fangs-v12';
 const ASSETS_TO_CACHE = [
     './index.html',
     './manifest.json',
@@ -34,12 +34,19 @@ self.addEventListener('activate', function (event) {
     );
 });
 
-// Fetch: Network-first strategy for live updates, falling back to cache if offline
+// Fetch: Network-first strategy for app assets, bypassing Supabase API requests
 self.addEventListener('fetch', function (event) {
+    var url = event.request.url;
+
+    // Do not cache Supabase API calls so live matchmaking and leaderboards always fetch fresh data
+    if (url.includes('supabase.co')) {
+        return;
+    }
+
     event.respondWith(
         fetch(event.request).then(function (networkResponse) {
             return caches.open(CACHE_NAME).then(function (cache) {
-                if (event.request.method === 'GET' && event.request.url.startsWith('http')) {
+                if (event.request.method === 'GET' && url.startsWith('http')) {
                     cache.put(event.request, networkResponse.clone());
                 }
                 return networkResponse;
