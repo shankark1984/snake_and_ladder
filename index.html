@@ -3161,26 +3161,381 @@
         checkStartReady();
       });
 
+      function tokenOffset(playerIdx, totalOnCell, slotIdx) {
+        if (totalOnCell <= 1) return { dx: 0, dy: 0 };
+        var angle = (slotIdx / totalOnCell) * Math.PI * 2;
+        return { dx: Math.cos(angle) * 2.2, dy: Math.sin(angle) * 2.2 };
+      }
+
+      function pawnSVG(color, gender) {
+        if (gender === 'robot') {
+          return '<svg viewBox="0 0 24 34" class="pawn-svg">' +
+            '<ellipse cx="12" cy="31" rx="7" ry="2.3" fill="rgba(0,0,0,0.25)"/>' +
+            '<line x1="12" y1="4" x2="12" y2="1" stroke="#37474f" stroke-width="1.4"/>' +
+            '<circle cx="12" cy="1" r="1.3" fill="' + color + '"/>' +
+            '<rect x="6" y="14" width="12" height="13" rx="3" fill="' + color + '"/>' +
+            '<rect x="9" y="17" width="6" height="5" rx="1" fill="#37474f"/>' +
+            '<rect x="5" y="4" width="14" height="11" rx="4" fill="#cfd8dc" stroke="#37474f" stroke-width="1"/>' +
+            '<rect x="7.5" y="8" width="3" height="3" fill="#37474f"/>' +
+            '<rect x="13.5" y="8" width="3" height="3" fill="#37474f"/>' +
+            '</svg>';
+        }
+        var skin = '#f2c9a0';
+        var hairColor = '#3a2a1a';
+        var hair = (gender === 'girl')
+          ? '<circle cx="6.5" cy="7" r="2.6" fill="' + hairColor + '"/><circle cx="17.5" cy="7" r="2.6" fill="' + hairColor + '"/><path d="M6 8 Q12 1 18 8 Q18 4 12 3 Q6 4 6 8" fill="' + hairColor + '"/>'
+          : '<path d="M5.5 8 Q12 0.5 18.5 8 Q17 4.5 12 4 Q7 4.5 5.5 8" fill="' + hairColor + '"/>';
+        var body = (gender === 'girl')
+          ? '<path d="M8.5 14 L15.5 14 L19 27 Q12 30.5 5 27 Z" fill="' + color + '"/>'
+          : '<rect x="7" y="14" width="10" height="13" rx="3" fill="' + color + '"/>';
+        return '<svg viewBox="0 0 24 34" class="pawn-svg">' +
+          '<ellipse cx="12" cy="31" rx="7" ry="2.3" fill="rgba(0,0,0,0.25)"/>' +
+          body +
+          hair +
+          '<circle cx="12" cy="9" r="6" fill="' + skin + '"/>' +
+          '<circle cx="9.4" cy="9.2" r="0.9" fill="#1c1c1c"/>' +
+          '<circle cx="14.6" cy="9.2" r="0.9" fill="#1c1c1c"/>' +
+          '<path d="M10 11.6 Q12 13 14 11.6" stroke="#8a5a3a" stroke-width="0.6" fill="none" stroke-linecap="round"/>' +
+          '</svg>';
+      }
+
+      function makeTokenEl(p, xPercent, yPercent, extraClass) {
+        var el = document.createElement('div');
+        el.className = 'token' + (extraClass ? (' ' + extraClass) : '');
+        el.style.left = xPercent + '%';
+        el.style.top = yPercent + '%';
+        el.innerHTML = pawnSVG(p.color, p.gender || 'boy');
+        return el;
+      }
+
+      function renderTokens(extraClassForAnimating) {
+        var layer = document.getElementById('tokens-layer');
+        layer.innerHTML = '';
+        var animId = state.animatingPlayerId;
+
+        var groups = {};
+        state.players.forEach(function (p) {
+          if (p.id === animId) return;
+          var key = p.pos;
+          groups[key] = groups[key] || [];
+          groups[key].push(p);
+        });
+        Object.keys(groups).forEach(function (posKey) {
+          var pos = parseInt(posKey, 10);
+          var group = groups[posKey];
+          var center = pos === 0 ? { x: 5, y: 105 } : cellCenterPercent(pos);
+          group.forEach(function (p, i) {
+            var off = tokenOffset(p.id, group.length, i);
+            var el = makeTokenEl(p, center.x + off.dx, pos === 0 ? 97 : (center.y + off.dy));
+            layer.appendChild(el);
+          });
+        });
+
+        if (animId !== null && animId !== undefined) {
+          var animPlayer = state.players.filter(function (p) { return p.id === animId; })[0];
+          if (animPlayer) {
+            var coords = state.animOverride || (animPlayer.pos === 0 ? { x: 5, y: 97 } : cellCenterPercent(animPlayer.pos));
+            var el2 = makeTokenEl(animPlayer, coords.x, coords.y, extraClassForAnimating);
+            layer.appendChild(el2);
+          }
+        }
+      }
+
+      function renderPlayersList() {
+        var list = document.getElementById('players-list');
+        list.innerHTML = '';
+        state.players.forEach(function (p, idx) {
+          var row = document.createElement('div');
+          row.className = 'player-row' + (idx === state.currentIndex ? ' active' : '');
+          var sw = document.createElement('div');
+          sw.className = 'swatch';
+          sw.style.background = p.color;
+          var name = document.createElement('div');
+          name.className = 'pname';
+          name.textContent = p.name;
+          var pos = document.createElement('div');
+          pos.className = 'ppos';
+          pos.textContent = p.pos + ' / 100';
+          row.appendChild(sw);
+          row.appendChild(name);
+          row.appendChild(pos);
+          list.appendChild(row);
+        });
+      }
+
+      function updateTurnBanner() {
+        var who = document.getElementById('turn-who');
+        var p = state.players[state.currentIndex];
+
+        if (state.mode === 'battle') {
+          var suffix2 = p.isMe ? ' (you)' : '';
+          who.innerHTML = '<span class="dot" style="background:' + p.color + '"></span>' + p.name + suffix2 + "'s turn";
+          var canRollBattle = !!p.isMe && !state.rolling && !state.finished;
+          diceHint.textContent = state.finished ? 'Game over' : (p.isMe ? '👉 Tap the dice to roll' : '⏳ Waiting for ' + p.name + '…');
+          diceWrap.classList.toggle('disabled', !canRollBattle);
+          return;
+        }
+
+        var suffix = p.isCPU ? ' is thinking…' : "'s turn";
+        who.innerHTML = '<span class="dot" style="background:' + p.color + '"></span>' + p.name + suffix;
+        var canRoll = !p.isCPU && !state.rolling && !state.finished;
+        diceHint.textContent = p.isCPU ? '🤖 Computer is rolling…' : (state.finished ? 'Game over' : '👉 Tap the dice to roll');
+        diceWrap.classList.toggle('disabled', !canRoll);
+      }
+
+      function logMsg(text) {
+        var box = document.getElementById('log-box');
+        var line = document.createElement('div');
+        line.textContent = text;
+        box.appendChild(line);
+      }
+
+      var diceCube = document.getElementById('dice-cube');
+      var diceRot = { x: 0, y: 0 };
+      var DICE_SHOW = {
+        1: { x: 0, y: 0 },
+        2: { x: 0, y: -90 },
+        3: { x: -90, y: 0 },
+        4: { x: 90, y: 0 },
+        5: { x: 0, y: 90 },
+        6: { x: 0, y: 180 }
+      };
+
+      function spinDiceTo(value) {
+        var target = DICE_SHOW[value];
+        var deltaX = (((target.x - diceRot.x) % 360) + 360) % 360;
+        var deltaY = (((target.y - diceRot.y) % 360) + 360) % 360;
+        diceRot.x += 720 + deltaX;
+        diceRot.y += 720 + deltaY;
+        diceCube.style.transform = 'rotateX(' + diceRot.x + 'deg) rotateY(' + diceRot.y + 'deg)';
+      }
+
+      var diceWrap = document.getElementById('dice-wrap');
+      var diceHint = document.getElementById('dice-hint');
+
+      function tryRoll() {
+        if (state.mode === 'battle') { battleTryRoll(); return; }
+        var current = state.players[state.currentIndex];
+        if (state.rolling || state.finished || (current && current.isCPU)) return;
+        sfx.diceTap();
+        doRoll();
+      }
+      diceWrap.addEventListener('click', tryRoll);
+      diceWrap.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          tryRoll();
+        }
+      });
+
+      function doRoll() {
+        if (state.rolling || state.finished) return;
+        state.rolling = true;
+        diceWrap.classList.add('disabled');
+        diceHint.textContent = 'Rolling…';
+        sfx.diceRoll();
+
+        var finalVal = 1 + Math.floor(Math.random() * 6);
+        spinDiceTo(finalVal);
+
+        setTimeout(function () {
+          handleRollResult(finalVal);
+        }, 900);
+      }
+
+      function maybeAutoRollForCPU() {
+        if (state.finished) return;
+        var current = state.players[state.currentIndex];
+        if (current && current.isCPU) {
+          diceWrap.classList.add('disabled');
+          setTimeout(function () { doRoll(); }, 850);
+        }
+      }
+
+      function walkSteps(p, steps, cb) {
+        state.animatingPlayerId = p.id;
+        var remaining = steps;
+        function stepOnce() {
+          if (remaining <= 0) {
+            state.animOverride = null;
+            cb();
+            return;
+          }
+          p.pos += 1;
+          state.animOverride = (p.pos === 0) ? { x: 5, y: 97 } : cellCenterPercent(p.pos);
+          renderTokens('hopping');
+          renderPlayersList();
+          sfx.step();
+          remaining -= 1;
+          setTimeout(stepOnce, 340);
+        }
+        stepOnce();
+      }
+
+      function climbLadder(p, destPos, cb) {
+        state.animatingPlayerId = p.id;
+        var fromPt = cellCenterPercent(p.pos);
+        var toPt = cellCenterPercent(destPos);
+        var subSteps = Math.max(3, Math.min(6, Math.round(Math.abs(destPos - p.pos) / 5) + 3));
+        var i = 1;
+        function stepOnce() {
+          if (i > subSteps) {
+            p.pos = destPos;
+            state.animOverride = null;
+            renderTokens();
+            renderPlayersList();
+            cb();
+            return;
+          }
+          var t = i / subSteps;
+          state.animOverride = {
+            x: fromPt.x + (toPt.x - fromPt.x) * t,
+            y: fromPt.y + (toPt.y - fromPt.y) * t
+          };
+          renderTokens('climbing');
+          sfx.climbStep(t);
+          i += 1;
+          setTimeout(stepOnce, 300);
+        }
+        stepOnce();
+      }
+
+      function snakeBiteAndSlide(p, destPos, cb) {
+        state.animatingPlayerId = p.id;
+        state.animOverride = cellCenterPercent(p.pos);
+        renderTokens('bitten');
+        sfx.bite();
+
+        var headEl = document.querySelector('.snake-head[data-start="' + p.pos + '"]');
+        if (headEl) {
+          headEl.classList.add('bite-pulse');
+          setTimeout(function () { headEl.classList.remove('bite-pulse'); }, 450);
+        }
+
+        setTimeout(function () {
+          sfx.slide();
+          var waypoints = snakeWaypoints(cellCenterPercent(p.pos), cellCenterPercent(destPos));
+          var i = 1;
+          function stepOnce() {
+            if (i >= waypoints.length) {
+              p.pos = destPos;
+              state.animOverride = null;
+              renderTokens();
+              renderPlayersList();
+              cb();
+              return;
+            }
+            state.animOverride = waypoints[i];
+            renderTokens('sliding');
+            i += 1;
+            setTimeout(stepOnce, 140);
+          }
+          stepOnce();
+        }, 450);
+      }
+
+      function afterMoveComplete(p, rolledValue) {
+        state.animatingPlayerId = null;
+        state.animOverride = null;
+        if (p.pos === 100) {
+          setTimeout(function () { declareWinner(p); }, 300);
+        } else {
+          finishTurn(rolledValue);
+        }
+      }
+
+      function handleRollResult(value) {
+        var p = state.players[state.currentIndex];
+        state.rollCounts[p.id] = (state.rollCounts[p.id] || 0) + 1;
+        logMsg(p.name + ' rolled a ' + value + '.');
+
+        var target = p.pos + value;
+        if (target > 100) {
+          logMsg(p.name + ' needs an exact roll to finish — no move.');
+          finishTurn(value);
+          return;
+        }
+
+        var board = BOARDS[state.boardKey];
+
+        walkSteps(p, value, function () {
+          if (board.ladders[p.pos] !== undefined) {
+            var dest = board.ladders[p.pos];
+            logMsg(p.name + ' climbed a ladder up to ' + dest + '!');
+            climbLadder(p, dest, function () { afterMoveComplete(p, value); });
+          } else if (board.snakes[p.pos] !== undefined) {
+            var dest2 = board.snakes[p.pos];
+            logMsg(p.name + ' was bitten by a snake and slid down to ' + dest2 + '.');
+            snakeBiteAndSlide(p, dest2, function () { afterMoveComplete(p, value); });
+          } else {
+            afterMoveComplete(p, value);
+          }
+        });
+      }
+
+      function finishTurn(rolledValue) {
+        state.rolling = false;
+        if (rolledValue === 6) {
+          logMsg(state.players[state.currentIndex].name + ' rolled a 6 and goes again!');
+          updateTurnBanner();
+          maybeAutoRollForCPU();
+          return;
+        }
+        state.currentIndex = (state.currentIndex + 1) % state.players.length;
+        updateTurnBanner();
+        renderPlayersList();
+        maybeAutoRollForCPU();
+      }
+
+      function declareWinner(p) {
+        state.finished = true;
+        diceWrap.classList.add('disabled');
+        diceHint.textContent = 'Game over';
+        sfx.win();
+        logMsg(p.name + ' reached 100 and wins the game! 🎉');
+        document.getElementById('winner-title').textContent = '🎉 ' + p.name + ' wins!';
+        var sub;
+        var vsCPU = state.players.some(function (pl) { return pl.isCPU; });
+        if (vsCPU) {
+          sub = p.isCPU
+            ? 'The Computer beat you to square 100 — want a rematch?'
+            : 'You beat the Computer to square 100. Nice roll!';
+        } else {
+          sub = p.name + ' was first to reach square 100.';
+        }
+        document.getElementById('winner-sub').textContent = sub;
+
+        var pointsEl = document.getElementById('winner-points');
+        if (p.id === 0 && state.profile) {
+          var rollsUsed = state.rollCounts[p.id] || 1;
+          var result = awardPointsForWin(rollsUsed, state.boardKey);
+          var html = '⭐ +' + result.pts + ' points earned';
+          if (result.leveledUp) {
+            html += '<span class="lvl-up">🎉 Leveled up to Level ' + result.level + '!</span>';
+            setTimeout(function () { sfx.levelUp(); }, 500);
+          }
+          pointsEl.innerHTML = html;
+          pointsEl.style.display = 'block';
+        } else {
+          pointsEl.style.display = 'none';
+          if (state.numPlayers > 1) {
+            logMsg('Only the account holder (Player 1) earns points and leaderboard credit.');
+          }
+        }
+
+        document.getElementById('winner-overlay').style.display = 'flex';
+      }
+
     })();
   </script>
 
   <script>
-    // Auto-Update Service Worker Script
+    // Register Service Worker for PWA Installation & Offline Caching
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
-          registration.onupdatefound = function () {
-            var installingWorker = registration.installing;
-            installingWorker.onstatechange = function () {
-              if (installingWorker.state === 'installed') {
-                if (navigator.serviceWorker.controller) {
-                  // New update available, auto reload for all users
-                  window.location.reload();
-                }
-              }
-            };
-          };
-        }).catch(function (err) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function (err) {
           console.log('ServiceWorker registration failed: ', err);
         });
       });
