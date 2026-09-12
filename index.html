@@ -1331,10 +1331,49 @@
       border-radius: 3px;
       display: inline-block;
     }
+
+    /* PWA Install Banner Styles */
+    .install-banner {
+      display: none;
+      /* Hidden by default */
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--ladder);
+      color: #fff;
+      text-align: center;
+      padding: 14px 20px;
+      font-family: 'Baloo 2', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      z-index: 9999;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+      border-top: 3px solid var(--ladder-dark);
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .install-banner button {
+      background: rgba(0, 0, 0, 0.2);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- PWA Install Message (Hidden by default, shown via JS if not in standalone mode) -->
+  <div id="install-message" class="install-banner">
+    <span>📱 For the best experience, add this game to your home screen!</span>
+    <button onclick="this.parentElement.style.display='none'">Dismiss</button>
+  </div>
 
   <div class="wrap">
     <header class="top">
@@ -3623,6 +3662,19 @@
       }
 
     })();
+  </script>
+
+  <!-- PWA Install Prompt Script -->
+  <script>
+    window.addEventListener('load', function () {
+      // Check if the app is installed (standalone mode)
+      var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+      // If it's running in a normal browser tab, show the install message
+      if (!isStandalone) {
+        document.getElementById('install-message').style.display = 'flex';
+      }
+    });
   </script>
 
   <script>
