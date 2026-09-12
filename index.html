@@ -2262,15 +2262,18 @@
       function stopBattlePolling() {
         if (state.battle.pollTimer) { clearInterval(state.battle.pollTimer); state.battle.pollTimer = null; }
         if (state.battle.waitTimer) { clearInterval(state.battle.waitTimer); state.battle.waitTimer = null; }
+        if (state.battle.disconnectCheckTimer) { clearInterval(state.battle.disconnectCheckTimer); state.battle.disconnectCheckTimer = null; }
       }
 
       function startBattlePolling() {
         stopBattlePolling();
+        // Poll and send heartbeat every 2.5 seconds
         state.battle.pollTimer = setInterval(pollBattle, 2500);
       }
 
       function pushBattleState(rolledValue, winnerUserId) {
         if (!state.storageOK || !state.battle.roomCode) return;
+        var myId = state.profile.userId;
         var doc = {
           roomCode: state.battle.roomCode,
           boardKey: state.boardKey,
@@ -2280,21 +2283,83 @@
           }),
           positions: {},
           currentTurnUserId: state.players[state.currentIndex].userId,
-          lastRoll: { userId: state.battle.myUserId, value: rolledValue, seq: state.battle.lastSeenSeq + 1 },
+          lastRoll: { userId: myId, value: rolledValue, seq: state.battle.lastSeenSeq + 1 },
+          heartbeats: {},
           winnerUserId: winnerUserId || null,
           updatedAt: Date.now()
         };
-        state.players.forEach(function (p) { doc.positions[p.userId] = p.pos; });
-        state.battle.lastSeenSeq = doc.lastRoll.seq;
-        window.storage.set(battleKey(state.battle.roomCode), JSON.stringify(doc), true).catch(function () {
-          logMsg('⚠️ Could not sync your move — check your connection.');
+
+        state.players.forEach(function (p) {
+          doc.positions[p.userId] = p.pos;
         });
+
+        // Retain existing heartbeats and update current user's timestamp
+        window.storage.get(battleKey(state.battle.roomCode), true).then(function (res) {
+          try {
+            var existing = JSON.parse(res.value);
+            doc.heartbeats = existing.heartbeats || {};
+          } catch (e) { }
+          doc.heartbeats[myId] = Date.now();
+
+          state.battle.lastSeenSeq = doc.lastRoll.seq;
+          window.storage.set(battleKey(state.battle.roomCode), JSON.stringify(doc), true).catch(function () {
+            logMsg('⚠️ Could not sync your move — check your connection.');
+          });
+        }).catch(function () {
+          doc.heartbeats[myId] = Date.now();
+          state.battle.lastSeenSeq = doc.lastRoll.seq;
+          window.storage.set(battleKey(state.battle.roomCode), JSON.stringify(doc), true).catch(function () { });
+        });
+      }
+
+      // Sends periodic heartbeats even when it's not your turn
+      function sendHeartbeatOnly() {
+        if (state.mode !== 'battle' || !state.battle.roomCode || state.finished) return;
+        var myId = state.profile.userId;
+        window.storage.get(battleKey(state.battle.roomCode), true).then(function (res) {
+          var doc = JSON.parse(res.value);
+          if (doc && doc.status === 'active') {
+            doc.heartbeats = doc.heartbeats || {};
+            doc.heartbeats[myId] = Date.now();
+            window.storage.set(battleKey(state.battle.roomCode), JSON.stringify(doc), true).catch(function () { });
+          }
+        }).catch(function () { });
       }
 
       function pollBattle() {
         if (state.mode !== 'battle' || !state.battle.roomCode) return;
+
+        // Keep our own heartbeat alive
+        sendHeartbeatOnly();
+
         window.storage.get(battleKey(state.battle.roomCode), true).then(function (res) {
           var doc = JSON.parse(res.value);
+          if (!doc) return;
+
+          // Check for opponent disconnect (45s threshold)
+          if (doc.status === 'active' && doc.players && doc.players.length >= 2) {
+            var myId = state.profile.userId;
+            var opponent = doc.players.find(function (p) { return p.userId !== myId; });
+            if (opponent && doc.heartbeats && doc.heartbeats[opponent.userId]) {
+              var lastSeenTime = doc.heartbeats[opponent.userId];
+              var diffSec = (Date.now() - lastSeenTime) / 1000;
+
+              if (diffSec > 45 && !state.finished) {
+                // Opponent timed out! Declare local user as winner due to disconnect.
+                logMsg('⚠️ ' + opponent.name + ' disconnected. Declaring walkover win.');
+                battleDeclareDisconnectWinner(opponent.name);
+                return;
+              } else if (diffSec > 5 && !state.finished) {
+                // Show notification banner or status update that opponent might be reconnecting
+                var statusEl = document.getElementById('battle-status');
+                if (statusEl && !statusEl.textContent.includes('disconnected')) {
+                  statusEl.textContent = '⚠️ Opponent connection unstable... waiting to reconnect (' + Math.round(45 - diffSec) + 's)';
+                }
+              }
+            }
+          }
+
+          // Handle incoming move syncs
           if (doc.lastRoll && doc.lastRoll.seq > state.battle.lastSeenSeq && doc.lastRoll.userId !== state.battle.myUserId) {
             state.battle.lastSeenSeq = doc.lastRoll.seq;
             var actorIdx = state.players.findIndex(function (p) { return p.userId === doc.lastRoll.userId; });
@@ -2302,6 +2367,33 @@
             battleResolveMove(doc.lastRoll.value, false);
           }
         }).catch(function () { });
+      }
+
+      function battleDeclareDisconnectWinner(opponentName) {
+        state.finished = true;
+        diceWrap.classList.add('disabled');
+        diceHint.textContent = 'Opponent disconnected';
+        sfx.win();
+        stopBattlePolling();
+
+        logMsg(opponentName + ' failed to reconnect within 45s. You win by forfeit! 🎉');
+        document.getElementById('winner-title').textContent = '🎉 You win by forfeit!';
+        document.getElementById('winner-sub').textContent = opponentName + ' disconnected from the game.';
+
+        var pointsEl = document.getElementById('winner-points');
+        if (state.profile) {
+          var result = awardPointsForWin(10, state.boardKey);
+          var html = '⭐ +' + result.pts + ' points earned (Forfeit Win)';
+          if (result.leveledUp) {
+            html += '<span class="lvl-up">🎉 Leveled up to Level ' + result.level + '!</span>';
+            setTimeout(function () { sfx.levelUp(); }, 500);
+          }
+          pointsEl.innerHTML = html;
+          pointsEl.style.display = 'block';
+        } else {
+          pointsEl.style.display = 'none';
+        }
+        document.getElementById('winner-overlay').style.display = 'flex';
       }
 
       function enterBattleBoard(doc) {
