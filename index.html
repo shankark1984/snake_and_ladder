@@ -9,6 +9,46 @@
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ============================================================
+     iOS / Safari — home screen install + status bar styling
+     ============================================================ -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ladders & Fangs">
+  <link rel="apple-touch-icon" href="./icons/icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="./icons/icon-167.png">
+
+  <!-- iOS splash screens (optional but highly recommended) -->
+  <link rel="apple-touch-startup-image" href="./splash/splash-1290x2796.png"
+    media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="./splash/splash-1170x2532.png"
+    media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="./splash/splash-1284x2778.png"
+    media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+
+  <!-- ============================================================
+     Android / Chrome — theme + address bar color
+     ============================================================ -->
+  <meta name="theme-color" content="#0b1f21" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b1f21" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Ladders & Fangs">
+
+  <!-- ============================================================
+     Windows / Edge — tile color
+     ============================================================ -->
+  <meta name="msapplication-TileColor" content="#0b1f21">
+  <meta name="msapplication-TileImage" content="./icons/icon-144.png">
+  <meta name="msapplication-config" content="./browserconfig.xml">
+  <meta name="msapplication-tap-highlight" content="no">
+
+  <!-- ============================================================
+     Cross-platform meta
+     ============================================================ -->
+  <meta name="format-detection" content="telephone=no">
+  <meta name="color-scheme" content="dark light">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700;800;900&display=swap');
 
@@ -4351,6 +4391,81 @@
 
       window.addEventListener('appinstalled', function () {
         if (banner) banner.style.display = 'none';
+      });
+    })();
+
+    (function handleDeepLinks() {
+      var params = new URLSearchParams(location.search);
+      var action = params.get('action');
+      if (!action) return;
+
+      // Wait for the app to be ready, then dispatch the action
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          switch (action) {
+            case 'quickplay':
+              document.querySelector('[data-mode="local"]')?.click();
+              document.querySelector('[data-count="1"]')?.click();
+              break;
+
+            case 'create-room':
+              document.querySelector('[data-mode="battle"]')?.click();
+              setTimeout(function () {
+                document.getElementById('create-room-btn')?.click();
+              }, 300);
+              break;
+
+            case 'join-room':
+              document.querySelector('[data-mode="battle"]')?.click();
+              setTimeout(function () {
+                document.getElementById('join-code-input')?.focus();
+              }, 300);
+              break;
+
+            case 'leaderboard':
+              document.getElementById('leaderboard-btn')?.click();
+              break;
+
+            case 'builder':
+              document.getElementById('open-builder-btn')?.click();
+              break;
+
+            case 'share':
+              // Share target: if a URL contains a room invite, join it
+              var url = params.get('url') || '';
+              var text = params.get('text') || '';
+              var match = (url + ' ' + text).match(/[A-Z0-9]{5}/);
+              if (match) {
+                document.querySelector('[data-mode="battle"]')?.click();
+                setTimeout(function () {
+                  var input = document.getElementById('join-code-input');
+                  if (input) { input.value = match[0]; }
+                  document.getElementById('join-room-btn')?.click();
+                }, 400);
+              }
+              break;
+
+            case 'import-board':
+              // File handler — user shared a .lfb file
+              // Read it on drop, validate, and load into BOARDS.custom
+              console.log('Import board flow triggered');
+              break;
+
+            case 'invite':
+              var code = params.get('invite');
+              if (code) {
+                document.querySelector('[data-mode="battle"]')?.click();
+                setTimeout(function () {
+                  var input = document.getElementById('join-code-input');
+                  if (input) input.value = code.toUpperCase();
+                }, 400);
+              }
+              break;
+          }
+
+          // Clean the URL so refresh doesn't re-trigger
+          history.replaceState({}, '', location.pathname);
+        }, 600);
       });
     })();
   </script>
